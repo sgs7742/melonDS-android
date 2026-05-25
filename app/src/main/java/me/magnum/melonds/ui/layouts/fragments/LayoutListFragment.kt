@@ -17,4 +17,6 @@ class LayoutListFragment : BaseLayoutsFragment() {
     override fun getFallbackLayoutId(): UUID {
         return LayoutConfiguration.DEFAULT_ID
     }
+
+    override fun supportsLayoutFileOperations(): Boolean = true
 }

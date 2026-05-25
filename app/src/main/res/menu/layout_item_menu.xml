@@ -5,6 +5,10 @@
             android:title="@string/edit" />
 
     <item
+            android:id="@+id/action_layout_export"
+            android:title="@string/layout_export" />
+
+    <item
             android:id="@+id/action_layout_delete"
             android:title="@string/delete" />
 </menu>

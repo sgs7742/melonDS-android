@@ -3,6 +3,7 @@ package me.magnum.melonds.github.repositories
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import androidx.preference.PreferenceManager
 import androidx.core.net.toUri
 import io.reactivex.Maybe
 import io.reactivex.Single
@@ -10,6 +11,7 @@ import me.magnum.melonds.domain.model.AppUpdate
 import me.magnum.melonds.domain.model.Version
 import me.magnum.melonds.domain.repositories.UpdatesRepository
 import me.magnum.melonds.github.GitHubApi
+import me.magnum.melonds.github.PREF_KEY_GITHUB_CHECK_FOR_UPDATES
 import me.magnum.melonds.github.dtos.ReleaseDto
 import me.magnum.melonds.utils.enumValueOfIgnoreCase
 import java.util.*
@@ -62,6 +64,13 @@ class GitHubUpdatesRepository(private val context: Context, private val api: Git
 
     private fun shouldCheckUpdates(): Single<Boolean> {
         return Single.create { emitter ->
+            val updateCheckEnabled = PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(PREF_KEY_GITHUB_CHECK_FOR_UPDATES, true)
+            if (!updateCheckEnabled) {
+                emitter.onSuccess(false)
+                return@create
+            }
+
             val lastCheckUpdateTimestamp = preferences.getLong(KEY_LAST_UPDATE_CHECK, -1)
             if (lastCheckUpdateTimestamp == (-1).toLong()) {
                 emitter.onSuccess(true)

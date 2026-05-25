@@ -56,6 +56,7 @@ class LayoutEditorActivity : AppCompatActivity() {
     private var areBottomControlsShown = true
     private var areScalingControlsShown = true
     private var selectedViewMinSize = 0
+    private var isUpdatingSeekBar = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +73,40 @@ class LayoutEditorActivity : AppCompatActivity() {
             binding.viewLayoutEditor.deleteSelectedView()
         }
 
+        val positionStep = LayoutEditorView.POSITION_SIZE_STEP_PX
+        setupRepeatNudgeButton(binding.buttonNudgeLeft) {
+            binding.viewLayoutEditor.nudgeSelectedViewPosition(-positionStep, 0)
+            updateEditorControlsFromSelectedView()
+        }
+        setupRepeatNudgeButton(binding.buttonNudgeRight) {
+            binding.viewLayoutEditor.nudgeSelectedViewPosition(positionStep, 0)
+            updateEditorControlsFromSelectedView()
+        }
+        setupRepeatNudgeButton(binding.buttonNudgeUp) {
+            binding.viewLayoutEditor.nudgeSelectedViewPosition(0, -positionStep)
+            updateEditorControlsFromSelectedView()
+        }
+        setupRepeatNudgeButton(binding.buttonNudgeDown) {
+            binding.viewLayoutEditor.nudgeSelectedViewPosition(0, positionStep)
+            updateEditorControlsFromSelectedView()
+        }
+        setupRepeatNudgeButton(binding.buttonSizeDecrease) {
+            binding.viewLayoutEditor.nudgeSelectedViewSize(-positionStep)
+            updateEditorControlsFromSelectedView()
+        }
+        setupRepeatNudgeButton(binding.buttonSizeIncrease) {
+            binding.viewLayoutEditor.nudgeSelectedViewSize(positionStep)
+            updateEditorControlsFromSelectedView()
+        }
+        binding.buttonCenterHorizontal.setOnClickListener {
+            binding.viewLayoutEditor.centerSelectedViewHorizontally()
+            updateEditorControlsFromSelectedView()
+        }
+        binding.buttonCenterVertical.setOnClickListener {
+            binding.viewLayoutEditor.centerSelectedViewVertically()
+            updateEditorControlsFromSelectedView()
+        }
+
         binding.viewLayoutEditor.setLayoutComponentViewBuilderFactory(EditorLayoutComponentViewBuilderFactory())
         binding.viewLayoutEditor.setOnClickListener {
             if (areBottomControlsShown)
@@ -82,21 +117,35 @@ class LayoutEditorActivity : AppCompatActivity() {
         binding.viewLayoutEditor.setOnViewSelectedListener { _, scale, maxSize, minSize ->
             hideBottomControls()
             showScalingControls(scale, maxSize, minSize)
+            updateEditorControlsFromSelectedView()
         }
         binding.viewLayoutEditor.setOnViewDeselectedListener {
+            binding.layoutScreenCentering.isGone = true
             hideScalingControls()
         }
         binding.seekBarScaling.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val scale = progress / binding.seekBarScaling.max.toFloat()
-                binding.textSize.text = ((binding.seekBarScaling.max - selectedViewMinSize) * scale + selectedViewMinSize).toInt().toString()
+                if (!fromUser || isUpdatingSeekBar) {
+                    return
+                }
+                val maxSize = binding.seekBarScaling.max
+                if (maxSize <= selectedViewMinSize) {
+                    return
+                }
+                val scale = progress / maxSize.toFloat()
                 binding.viewLayoutEditor.scaleSelectedView(scale)
+                binding.viewLayoutEditor.getSelectedViewScalingState()?.let { state ->
+                    binding.textSize.text = state.constrainedSize.toString()
+                }
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (!isUpdatingSeekBar) {
+                    updateEditorControlsFromSelectedView()
+                }
             }
         })
 
@@ -235,29 +284,55 @@ class LayoutEditorActivity : AppCompatActivity() {
         areBottomControlsShown = false
     }
 
-    private fun showScalingControls(currentScale: Float, maxSize: Int, minSize: Int, animate: Boolean = true) {
-        binding.seekBarScaling.apply {
-            max = maxSize
-            progress = (currentScale * maxSize).toInt()
-        }
+    private fun setupRepeatNudgeButton(button: android.view.View, action: () -> Unit) {
+        button.isClickable = true
+        button.setOnTouchListener(RepeatTouchListener(onRepeat = action))
+    }
 
+    private fun updateEditorControlsFromSelectedView() {
+        val state = binding.viewLayoutEditor.getSelectedViewScalingState() ?: return
+        selectedViewMinSize = state.minSize
+        binding.textSize.text = state.constrainedSize.toString()
+        binding.viewLayoutEditor.getSelectedViewRect()?.let { rect ->
+            binding.textPosition.text = getString(R.string.layout_position_coordinates, rect.x, rect.y)
+        }
+        binding.layoutScreenCentering.isVisible = binding.viewLayoutEditor.isSelectedViewScreen()
+        isUpdatingSeekBar = true
+        binding.seekBarScaling.max = state.maxSize
+        binding.seekBarScaling.progress = seekBarProgressFromSize(state.constrainedSize, state.minSize, state.maxSize)
+        isUpdatingSeekBar = false
+    }
+
+    private fun seekBarProgressFromSize(size: Int, minSize: Int, maxSize: Int): Int {
+        if (maxSize <= minSize) {
+            return 0
+        }
+        return ((size - minSize).toLong() * maxSize / (maxSize - minSize)).toInt().coerceIn(0, maxSize)
+    }
+
+    private fun showScalingControls(currentScale: Float, maxSize: Int, minSize: Int, animate: Boolean = true) {
         selectedViewMinSize = minSize
+        isUpdatingSeekBar = true
+        binding.seekBarScaling.max = maxSize
+        binding.seekBarScaling.progress = (currentScale * maxSize).toInt()
+        isUpdatingSeekBar = false
+        updateEditorControlsFromSelectedView()
 
         if (areScalingControlsShown) {
             return
         }
 
         if (animate) {
-            binding.layoutScaling
+            binding.layoutScalingContainer
                 .animate()
-                .y(binding.layoutScaling.bottom.toFloat() - binding.layoutScaling.height.toFloat())
+                .y(binding.layoutScalingContainer.bottom.toFloat() - binding.layoutScalingContainer.height.toFloat())
                 .setDuration(CONTROLS_SLIDE_ANIMATION_DURATION_MS)
                 .withStartAction {
-                    binding.layoutScaling.isVisible = true
+                    binding.layoutScalingContainer.isVisible = true
                 }
                 .start()
         } else {
-            binding.layoutScaling.isVisible = true
+            binding.layoutScalingContainer.isVisible = true
         }
 
         areScalingControlsShown = true
@@ -269,16 +344,16 @@ class LayoutEditorActivity : AppCompatActivity() {
         }
 
         if (animate) {
-            binding.layoutScaling
+            binding.layoutScalingContainer
                 .animate()
-                .y(binding.layoutScaling.bottom.toFloat())
+                .y(binding.layoutScalingContainer.bottom.toFloat())
                 .setDuration(CONTROLS_SLIDE_ANIMATION_DURATION_MS)
                 .withEndAction {
-                    binding.layoutScaling.isInvisible = true
+                    binding.layoutScalingContainer.isInvisible = true
                 }
                 .start()
         } else {
-            binding.layoutScaling.isInvisible = true
+            binding.layoutScalingContainer.isInvisible = true
         }
 
         areScalingControlsShown = false

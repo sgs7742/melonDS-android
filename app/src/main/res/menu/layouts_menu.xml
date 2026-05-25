@@ -9,4 +9,10 @@
         android:icon="@drawable/ic_add"
         android:orderInCategory="0"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_layouts_import"
+        android:title="@string/layout_import"
+        android:orderInCategory="1"
+        app:showAsAction="never" />
 </menu>

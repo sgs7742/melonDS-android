@@ -34,6 +34,25 @@ object FileUtils {
         }
     }
 
+    fun getFileNameFromUri(context: Context, uri: Uri?): String? {
+        if (uri == null) {
+            return null
+        }
+
+        return when (getUriSchema(uri)) {
+            "content" -> {
+                val documentFile = if (DocumentsContract.isDocumentUri(context, uri)) {
+                    DocumentFile.fromSingleUri(context, uri)
+                } else {
+                    DocumentFile.fromTreeUri(context, uri)
+                }
+                documentFile?.name
+            }
+            "file" -> File(getFilePathFromFileUri(uri)).name
+            else -> null
+        }
+    }
+
     private fun getUriSchema(uri: Uri): String? {
         val uriString = uri.toString()
         val indexOfSeparator = uriString.indexOf("://")

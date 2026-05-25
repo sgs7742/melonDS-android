@@ -7,8 +7,16 @@ import me.magnum.melonds.databinding.ItemCheatsFolderBinding
 import me.magnum.melonds.domain.model.CheatFolder
 
 class FoldersSubScreenFragment : SubScreenFragment() {
+    override fun onViewCreated(view: android.view.View, savedInstanceState: android.os.Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.getSelectedGame().observe(viewLifecycleOwner) {
+            refreshAdapter()
+        }
+    }
+
     override fun getSubScreenAdapter(): RecyclerView.Adapter<*> {
-        return FoldersAdapter(viewModel.getSelectedGame().value?.cheats ?: emptyList()) {
+        val folders = viewModel.getPlaceholderOrSelectedGame()?.cheats ?: emptyList()
+        return FoldersAdapter(folders) {
             viewModel.setSelectedFolder(it)
         }
     }
@@ -17,13 +25,10 @@ class FoldersSubScreenFragment : SubScreenFragment() {
         class ViewHolder(private val binding: ItemCheatsFolderBinding) : RecyclerView.ViewHolder(binding.root) {
             private lateinit var folder: CheatFolder
 
-            fun getFolder(): CheatFolder {
-                return folder
-            }
+            fun getFolder(): CheatFolder = folder
 
             fun setFolder(folder: CheatFolder) {
                 this.folder = folder
-
                 binding.textFolderName.text = folder.name
             }
         }
@@ -41,8 +46,6 @@ class FoldersSubScreenFragment : SubScreenFragment() {
             holder.setFolder(folders[position])
         }
 
-        override fun getItemCount(): Int {
-            return folders.size
-        }
+        override fun getItemCount(): Int = folders.size
     }
 }

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_cheats_add"
+        android:icon="@drawable/ic_add"
+        android:title="@string/add_cheat"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_cheats_more"
+        android:icon="@drawable/ic_more_vert"
+        android:title="@string/more_options"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/action_cheats_backup"
+                android:title="@string/backup_cheats" />
+            <item
+                android:id="@+id/action_cheats_restore"
+                android:title="@string/restore_cheats" />
+            <item
+                android:id="@+id/action_cheats_select"
+                android:title="@string/select_cheats" />
+        </menu>
+    </item>
+</menu>

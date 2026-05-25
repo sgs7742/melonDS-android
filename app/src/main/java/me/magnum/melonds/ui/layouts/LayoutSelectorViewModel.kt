@@ -3,13 +3,20 @@ package me.magnum.melonds.ui.layouts
 import androidx.lifecycle.SavedStateHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.schedulers.Schedulers
+import me.magnum.melonds.common.Schedulers as AppSchedulers
 import me.magnum.melonds.domain.repositories.LayoutsRepository
 import me.magnum.melonds.extensions.addTo
+import me.magnum.melonds.impl.LayoutFileOperations
 import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
-class LayoutSelectorViewModel @Inject constructor(layoutsRepository: LayoutsRepository, savedStateHandle: SavedStateHandle) : BaseLayoutsViewModel(layoutsRepository) {
+class LayoutSelectorViewModel @Inject constructor(
+        layoutsRepository: LayoutsRepository,
+        layoutFileOperations: LayoutFileOperations,
+        schedulers: AppSchedulers,
+        savedStateHandle: SavedStateHandle,
+) : BaseLayoutsViewModel(layoutsRepository, layoutFileOperations, schedulers) {
     private var currentSelectedLayout: UUID?
 
     init {

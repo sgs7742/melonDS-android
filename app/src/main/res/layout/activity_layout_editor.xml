@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,54 +17,192 @@
             android:layout_height="match_parent"
             android:focusable="false" />
 
-    <LinearLayout
-            android:id="@+id/layout_scaling"
+    <ScrollView
+            android:id="@+id/layout_scaling_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:orientation="horizontal"
             android:background="#AFFF"
-            android:clickable="true"
+            android:clickable="false"
             android:focusable="false"
-            android:gravity="center_vertical">
-
-        <Button
-                android:id="@+id/button_delete_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/delete"
-                style="@style/Button.Editor" />
+            android:fillViewport="true">
 
         <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minWidth="34sp"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
-
-            <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/textLayoutEditor"
-                    android:text="@string/label_size" />
-
-            <TextView
-                    android:id="@+id/text_size"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/textLayoutEditor"
-                    android:gravity="center_horizontal"
-                    tools:text="1080" />
-        </LinearLayout>
-
-        <SeekBar
-                android:id="@+id/seek_bar_scaling"
+                android:id="@+id/layout_scaling"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:max="10000"
-                android:layout_gravity="center_vertical" />
-    </LinearLayout>
+                android:orientation="vertical"
+                android:paddingBottom="4dp">
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="4dp"
+                    android:paddingTop="4dp">
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.15"
+                        android:orientation="vertical"
+                        android:gravity="center_vertical">
+
+                    <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/textLayoutEditor"
+                            android:text="@string/layout_position_step"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:textSize="12sp" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/text_position"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/textLayoutEditor"
+                            android:fontFamily="monospace"
+                            android:maxLines="1"
+                            android:ellipsize="none"
+                            app:autoSizeTextType="uniform"
+                            app:autoSizeMinTextSize="9sp"
+                            app:autoSizeMaxTextSize="12sp"
+                            app:autoSizeStepGranularity="1sp"
+                            tools:text="X:1080 Y:2139" />
+                </LinearLayout>
+
+                <Button
+                        android:id="@+id/button_nudge_left"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:minWidth="48dp"
+                        android:text="←"
+                        style="@style/Button.Editor.Nudge" />
+
+                <Button
+                        android:id="@+id/button_nudge_up"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:minWidth="48dp"
+                        android:text="↑"
+                        style="@style/Button.Editor.Nudge" />
+
+                <Button
+                        android:id="@+id/button_nudge_down"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:minWidth="48dp"
+                        android:text="↓"
+                        style="@style/Button.Editor.Nudge" />
+
+                <Button
+                        android:id="@+id/button_nudge_right"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:minWidth="48dp"
+                        android:text="→"
+                        style="@style/Button.Editor.Nudge" />
+            </LinearLayout>
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="4dp">
+
+                <Button
+                        android:id="@+id/button_delete_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/delete"
+                        style="@style/Button.Editor" />
+
+                <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="34sp"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/textLayoutEditor"
+                            android:text="@string/label_size" />
+
+                    <TextView
+                            android:id="@+id/text_size"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/textLayoutEditor"
+                            android:gravity="center_horizontal"
+                            tools:text="1080" />
+                </LinearLayout>
+
+                <Button
+                        android:id="@+id/button_size_decrease"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:minWidth="56dp"
+                        android:text="−10"
+                        style="@style/Button.Editor.Nudge" />
+
+                <SeekBar
+                        android:id="@+id/seek_bar_scaling"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:padding="8dp"
+                        android:max="10000"
+                        android:layout_gravity="center_vertical"
+                        android:splitTrack="false" />
+
+                <Button
+                        android:id="@+id/button_size_increase"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:minWidth="56dp"
+                        android:text="+10"
+                        style="@style/Button.Editor.Nudge" />
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/layout_screen_centering"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:paddingHorizontal="4dp"
+                    android:paddingBottom="4dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                <Button
+                        android:id="@+id/button_center_horizontal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/center_horizontal"
+                        style="@style/Button.Editor" />
+
+                <Button
+                        android:id="@+id/button_center_vertical"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:text="@string/center_vertical"
+                        style="@style/Button.Editor" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
     <LinearLayout
             android:id="@+id/layout_controls"

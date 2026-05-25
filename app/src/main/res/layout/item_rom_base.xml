@@ -35,5 +35,5 @@
             android:singleLine="true"
             android:ellipsize="start"
             android:textColor="?android:attr/textColorSecondary"
-            tools:text="/sdcard/Roms/DS/Pearl.nds" />
+            tools:text="Pearl.nds" />
 </merge>

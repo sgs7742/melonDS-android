@@ -14,6 +14,7 @@ import me.magnum.melonds.databinding.FragmentCheatsSubscreenBinding
 abstract class SubScreenFragment : Fragment() {
     protected val viewModel: CheatsViewModel by activityViewModels()
     private lateinit var binding: FragmentCheatsSubscreenBinding
+    private var listAdapter: RecyclerView.Adapter<*>? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentCheatsSubscreenBinding.inflate(inflater, container, false)
@@ -27,9 +28,17 @@ abstract class SubScreenFragment : Fragment() {
             val listLayoutManager = LinearLayoutManager(context)
             layoutManager = listLayoutManager
             addItemDecoration(DividerItemDecoration(context, listLayoutManager.orientation))
-            adapter = getSubScreenAdapter()
         }
-        binding.listItems.adapter?.notifyDataSetChanged()
+        refreshAdapter()
+    }
+
+    open fun refreshAdapter() {
+        if (!::binding.isInitialized) {
+            return
+        }
+        listAdapter = getSubScreenAdapter()
+        binding.listItems.adapter = listAdapter
+        listAdapter?.notifyDataSetChanged()
     }
 
     abstract fun getSubScreenAdapter(): RecyclerView.Adapter<*>

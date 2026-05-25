@@ -12,12 +12,23 @@ import kotlin.math.*
 typealias ViewSelectedListener = ((LayoutComponentView, currentScale: Float, maxSize: Int, minSize: Int) -> Unit)
 
 class LayoutEditorView(context: Context, attrs: AttributeSet?) : LayoutView(context, attrs) {
+    companion object {
+        const val POSITION_SIZE_STEP_PX = 10
+    }
+
     enum class Anchor {
         TOP_LEFT,
         TOP_RIGHT,
         BOTTOM_LEFT,
         BOTTOM_RIGHT
     }
+
+    data class SelectedViewScalingState(
+            val constrainedSize: Int,
+            val scale: Float,
+            val maxSize: Int,
+            val minSize: Int,
+    )
 
     private var onViewSelectedListener: ViewSelectedListener? = null
     private var onViewDeselectedListener: ((LayoutComponentView) -> Unit)? = null
@@ -103,6 +114,7 @@ class LayoutEditorView(context: Context, attrs: AttributeSet?) : LayoutView(cont
                         if (!dragging) {
                             selectView(layoutComponentView)
                         } else {
+                            snapViewPositionToGrid(layoutComponentView)
                             view.alpha = 0.5f
                             dragging = false
                         }
@@ -172,6 +184,73 @@ class LayoutEditorView(context: Context, attrs: AttributeSet?) : LayoutView(cont
         view.setPosition(Point(finalX.toInt(), finalY.toInt()))
     }
 
+    fun nudgeSelectedViewPosition(deltaX: Int, deltaY: Int) {
+        val view = selectedView ?: return
+        val rect = view.getRect()
+        val newX = snapToGrid(rect.x + deltaX).coerceIn(0, max(0, width - rect.width))
+        val newY = snapToGrid(rect.y + deltaY).coerceIn(0, max(0, height - rect.height))
+        view.setPosition(Point(newX, newY))
+    }
+
+    fun isSelectedViewScreen(): Boolean = selectedView?.component?.isScreen() == true
+
+    fun centerSelectedViewHorizontally() {
+        val view = selectedView ?: return
+        if (!view.component.isScreen()) {
+            return
+        }
+        val rect = view.getRect()
+        val centeredX = snapToGrid((width - rect.width) / 2).coerceIn(0, max(0, width - rect.width))
+        view.setPosition(Point(centeredX, rect.y))
+    }
+
+    fun centerSelectedViewVertically() {
+        val view = selectedView ?: return
+        if (!view.component.isScreen()) {
+            return
+        }
+        val rect = view.getRect()
+        val centeredY = snapToGrid((height - rect.height) / 2).coerceIn(0, max(0, height - rect.height))
+        view.setPosition(Point(rect.x, centeredY))
+    }
+
+    fun nudgeSelectedViewSize(deltaPx: Int) {
+        val view = selectedView ?: return
+        val rect = view.getRect()
+        val screenAspectRatio = width / height.toFloat()
+        val selectedViewAspectRatio = view.aspectRatio
+        val (newViewWidth, newViewHeight) = if (screenAspectRatio > selectedViewAspectRatio) {
+            val newHeight = snapToGrid(rect.height + deltaPx).coerceIn(minComponentSize, height)
+            Pair((newHeight * selectedViewAspectRatio).toInt(), newHeight)
+        } else {
+            val newWidth = snapToGrid(rect.width + deltaPx).coerceIn(minComponentSize, width)
+            Pair(newWidth, (newWidth / selectedViewAspectRatio).toInt())
+        }
+        applySelectedViewSize(newViewWidth, newViewHeight)
+    }
+
+    fun getSelectedViewRect(): Rect? = selectedView?.getRect()
+
+    fun getSelectedViewScalingState(): SelectedViewScalingState? {
+        val view = selectedView ?: return null
+        val rect = view.getRect()
+        val screenAspectRatio = width / height.toFloat()
+        val selectedViewAspectRatio = view.aspectRatio
+        val maxDimension: Int
+        val constrainedSize: Int
+
+        if (screenAspectRatio > selectedViewAspectRatio) {
+            maxDimension = height
+            constrainedSize = rect.height
+        } else {
+            maxDimension = width
+            constrainedSize = rect.width
+        }
+
+        val scale = (constrainedSize - minComponentSize) / (maxDimension - minComponentSize).toFloat()
+        return SelectedViewScalingState(constrainedSize, scale, maxDimension, minComponentSize)
+    }
+
     fun scaleSelectedView(newScale: Float) {
         val currentlySelectedView = selectedView ?: return
 
@@ -181,17 +260,22 @@ class LayoutEditorView(context: Context, attrs: AttributeSet?) : LayoutView(cont
         val newViewHeight: Int
 
         if (screenAspectRatio > selectedViewAspectRatio) {
-            // The scale range must go from minComponentSize to height
-            val scaledHeight = ((height - minComponentSize) * newScale + minComponentSize).roundToInt()
+            val scaledHeight = snapToGrid(((height - minComponentSize) * newScale + minComponentSize).roundToInt())
+                    .coerceIn(minComponentSize, height)
             newViewWidth = (scaledHeight * selectedViewAspectRatio).toInt()
             newViewHeight = scaledHeight
         } else {
-            // The scale range must go from minComponentSize to width
-            val scaledWidth = ((width - minComponentSize) * newScale + minComponentSize).roundToInt()
+            val scaledWidth = snapToGrid(((width - minComponentSize) * newScale + minComponentSize).roundToInt())
+                    .coerceIn(minComponentSize, width)
             newViewWidth = scaledWidth
             newViewHeight = (scaledWidth / selectedViewAspectRatio).toInt()
         }
 
+        applySelectedViewSize(newViewWidth, newViewHeight)
+    }
+
+    private fun applySelectedViewSize(newViewWidth: Int, newViewHeight: Int) {
+        val currentlySelectedView = selectedView ?: return
         val viewPosition = currentlySelectedView.getPosition()
         var viewX: Int
         var viewY: Int
@@ -234,5 +318,17 @@ class LayoutEditorView(context: Context, attrs: AttributeSet?) : LayoutView(cont
             }
         }
         currentlySelectedView.setPositionAndSize(Point(viewX, viewY), newViewWidth, newViewHeight)
+    }
+
+    private fun snapViewPositionToGrid(view: LayoutComponentView) {
+        val rect = view.getRect()
+        val snappedX = snapToGrid(rect.x).coerceIn(0, max(0, width - rect.width))
+        val snappedY = snapToGrid(rect.y).coerceIn(0, max(0, height - rect.height))
+        view.setPosition(Point(snappedX, snappedY))
+    }
+
+    private fun snapToGrid(value: Int): Int {
+        return ((value.toFloat() / POSITION_SIZE_STEP_PX).roundToInt() * POSITION_SIZE_STEP_PX)
+                .coerceAtLeast(0)
     }
 }

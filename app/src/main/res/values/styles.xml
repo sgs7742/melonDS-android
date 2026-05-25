@@ -62,6 +62,12 @@
         <item name="android:textColor">@color/textLayoutEditor</item>
     </style>
 
+    <style name="Button.Editor.Nudge" parent="Button.Editor">
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+    </style>
+
     <style name="Menu.OverflowUnder" parent="Widget.AppCompat.PopupMenu.Overflow">
         <item name="overlapAnchor">false</item>
         <item name="android:overlapAnchor">false</item>

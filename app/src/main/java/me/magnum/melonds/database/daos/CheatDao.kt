@@ -14,6 +14,9 @@ interface CheatDao {
     @Insert
     fun insertCheat(cheatEntity: CheatEntity): Long
 
+    @Update
+    fun updateCheat(cheatEntity: CheatEntity)
+
     @Insert
     fun insertCheats(cheatEntities: List<CheatEntity>): List<Long>
 
@@ -22,4 +25,16 @@ interface CheatDao {
 
     @Update(entity = CheatEntity::class)
     fun updateCheatsStatus(cheats: List<CheatStatusUpdate>)
+
+    @Query("SELECT * FROM cheat WHERE id = :cheatId")
+    fun getCheat(cheatId: Long): CheatEntity?
+
+    @Query("DELETE FROM cheat WHERE id = :cheatId")
+    fun deleteCheat(cheatId: Long)
+
+    @Query("DELETE FROM cheat WHERE id IN (:cheatIds)")
+    fun deleteCheats(cheatIds: List<Long>)
+
+    @Query("DELETE FROM cheat WHERE cheat_folder_id = :folderId")
+    fun deleteCheatsInFolder(folderId: Long)
 }

@@ -77,7 +77,7 @@ class RomEmulatorDelegate(activity: EmulatorActivity, private val picasso: Picas
                         throw EmulatorActivity.RomLoadFailedException(loadResult)
                     }
 
-                    MelonEmulator.setupCheats(cheats.toTypedArray())
+                    MelonEmulator.setupCheats(cheats.map { it.forEmulator() }.toTypedArray())
                     emitter.onSuccess(loadResult)
                 }
             }
@@ -251,9 +251,15 @@ class RomEmulatorDelegate(activity: EmulatorActivity, private val picasso: Picas
     private fun openCheatsActivity() {
         activity.openCheats(loadedRom) {
             cheatsLoadDisposable?.dispose()
+            if (!activity.viewModel.areCheatsEnabled()) {
+                MelonEmulator.setupCheats(emptyArray())
+                Toast.makeText(activity, R.string.enable_cheats, Toast.LENGTH_LONG).show()
+                activity.resumeEmulation()
+                return@openCheats
+            }
             cheatsLoadDisposable = loadRomCheats(loadedRom).observeOn(AndroidSchedulers.mainThread())
-                    .subscribe {
-                        MelonEmulator.setupCheats(it.toTypedArray())
+                    .subscribe { cheats ->
+                        MelonEmulator.setupCheats(cheats.map { cheat -> cheat.forEmulator() }.toTypedArray())
                         activity.resumeEmulation()
                     }
         }

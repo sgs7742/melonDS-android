@@ -2,6 +2,7 @@ package me.magnum.melonds.database.daos
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import io.reactivex.Maybe
@@ -14,7 +15,10 @@ interface GameDao {
     @Query("SELECT * FROM game WHERE game_code = :gameCode AND (game_checksum IS NULL OR game_checksum = :gameChecksum)")
     fun findGameWithCheats(gameCode: String, gameChecksum: String): Maybe<List<GameWithCheatCategories>>
 
-    @Insert
+    @Query("SELECT * FROM game WHERE game_code = :gameCode AND game_checksum = :gameChecksum LIMIT 1")
+    fun findGame(gameCode: String, gameChecksum: String): GameEntity?
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertGame(game: GameEntity): Long
 
     @Query("DELETE FROM game")

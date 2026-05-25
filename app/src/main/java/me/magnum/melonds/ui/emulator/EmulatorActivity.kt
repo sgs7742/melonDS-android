@@ -550,7 +550,7 @@ class EmulatorActivity : AppCompatActivity(), RendererListener {
         val romInfo = viewModel.getRomInfo(rom) ?: return
 
         val intent = Intent(this, CheatsActivity::class.java)
-        intent.putExtra(CheatsActivity.KEY_ROM_INFO, RomInfoParcelable.fromRomInfo(romInfo))
+        intent.putExtra(CheatsActivity.KEY_ROM_INFO, RomInfoParcelable.fromRomInfo(romInfo, viewModel.getRomDocumentFileName(rom)))
         cheatsLauncher.launch(intent)
     }
 

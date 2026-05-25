@@ -22,7 +22,6 @@ android {
     compileSdk = AppConfig.compileSdkVersion
     ndkVersion = AppConfig.ndkVersion
     defaultConfig {
-        applicationId = "me.magnum.melonds"
         minSdk = AppConfig.minSdkVersion
         targetSdk = AppConfig.targetSdkVersion
         versionCode = AppConfig.versionCode
@@ -56,8 +55,20 @@ android {
         }
     }
 
-    flavorDimensions.add("version")
+    flavorDimensions.addAll(listOf("install", "version"))
     productFlavors {
+        create("dual") {
+            dimension = "install"
+            applicationId = "me.magnum.melonds.dual"
+        }
+        create("dual2") {
+            dimension = "install"
+            applicationId = "me.magnum.melonds.dual2"
+        }
+        create("dual3") {
+            dimension = "install"
+            applicationId = "me.magnum.melonds.dual3"
+        }
         create("playStore") {
             dimension = "version"
             versionNameSuffix = " PS"

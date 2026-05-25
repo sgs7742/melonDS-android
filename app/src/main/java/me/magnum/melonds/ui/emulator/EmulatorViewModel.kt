@@ -172,6 +172,11 @@ class EmulatorViewModel @Inject constructor(
         return fileRomProcessor?.getRomInfo(rom)
     }
 
+    /** Storage file name (e.g. "Pokemon White 2 Edit.nds"), not the in-ROM title. */
+    fun getRomDocumentFileName(rom: Rom): String? {
+        return uriHandler.getUriDocument(rom.uri)?.name ?: rom.uri.lastPathSegment
+    }
+
     fun getRomSramFile(rom: Rom): Uri {
         val rootDirUri = settingsRepository.getSaveFileDirectory(rom)
 
@@ -253,6 +258,8 @@ class EmulatorViewModel @Inject constructor(
         else
             romOption.getValue()
     }
+
+    fun areCheatsEnabled(): Boolean = settingsRepository.areCheatsEnabled()
 
     fun getRomEnabledCheats(romInfo: RomInfo): LiveData<List<Cheat>> {
         val liveData = MutableLiveData<List<Cheat>>()

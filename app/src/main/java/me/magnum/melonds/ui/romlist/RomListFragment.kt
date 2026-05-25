@@ -153,7 +153,7 @@ class RomListFragment : Fragment() {
             open fun setRom(rom: Rom) {
                 this.rom = rom
                 textViewRomName.text = rom.name
-                textViewRomPath.text = FileUtils.getAbsolutePathFromSAFUri(view!!.context, rom.uri)
+                textViewRomPath.text = FileUtils.getFileNameFromUri(view!!.context, rom.uri)
                 imageViewRomIcon.setImageDrawable(null)
 
                 romIconLoadDisposable = romListViewModel.getRomIcon(rom).subscribe { romIcon ->

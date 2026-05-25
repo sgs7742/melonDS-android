@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.PopupMenu
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
@@ -48,19 +50,23 @@ abstract class BaseLayoutsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        layoutsAdapter = LayoutsAdapter(object : LayoutInteractionListener {
-            override fun onLayoutSelected(layout: LayoutConfiguration) {
-                this@BaseLayoutsFragment.onLayoutSelected(layout)
-            }
+        layoutsAdapter = LayoutsAdapter(
+                enableLayoutFileOperations = supportsLayoutFileOperations(),
+                onExportLayout = ::exportLayout,
+                layoutInteractionListener = object : LayoutInteractionListener {
+                    override fun onLayoutSelected(layout: LayoutConfiguration) {
+                        this@BaseLayoutsFragment.onLayoutSelected(layout)
+                    }
 
-            override fun onEditLayout(layout: LayoutConfiguration) {
-                this@BaseLayoutsFragment.editLayout(layout)
-            }
+                    override fun onEditLayout(layout: LayoutConfiguration) {
+                        this@BaseLayoutsFragment.editLayout(layout)
+                    }
 
-            override fun onDeleteLayout(layout: LayoutConfiguration) {
-                this@BaseLayoutsFragment.deleteLayout(layout)
-            }
-        })
+                    override fun onDeleteLayout(layout: LayoutConfiguration) {
+                        this@BaseLayoutsFragment.deleteLayout(layout)
+                    }
+                },
+        )
 
         binding.listLayouts.apply {
             val listLayoutManager = LinearLayoutManager(context)
@@ -78,18 +84,60 @@ abstract class BaseLayoutsFragment : Fragment() {
 
             layoutsAdapter.setLayouts(it)
         }
+
+        if (supportsLayoutFileOperations()) {
+            viewModel.getLayoutFileOperationResult().observe(viewLifecycleOwner, ::onLayoutFileOperationResult)
+            viewModel.getImportableLayoutFiles().observe(viewLifecycleOwner, ::showLayoutImportDialog)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.layouts_menu, menu)
+        if (!supportsLayoutFileOperations()) {
+            menu.findItem(R.id.action_layouts_import)?.isVisible = false
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_layouts_add -> createLayout()
+            R.id.action_layouts_import -> {
+                viewModel.loadImportableLayoutFiles()
+            }
             else -> return super.onOptionsItemSelected(item)
         }
         return true
+    }
+
+    protected open fun supportsLayoutFileOperations(): Boolean = false
+
+    private fun onLayoutFileOperationResult(result: LayoutFileOperationResult) {
+        when (result) {
+            is LayoutFileOperationResult.ExportSuccess -> {
+                Toast.makeText(requireContext(), getString(R.string.layout_export_success, result.fileName), Toast.LENGTH_LONG).show()
+            }
+            is LayoutFileOperationResult.ImportSuccess -> {
+                Toast.makeText(requireContext(), getString(R.string.layout_import_success, result.layoutName), Toast.LENGTH_LONG).show()
+            }
+            is LayoutFileOperationResult.Error -> {
+                Toast.makeText(requireContext(), result.messageResId, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun showLayoutImportDialog(files: List<me.magnum.melonds.impl.LayoutFileOperations.LayoutFileEntry>) {
+        val fileNames = files.map { it.displayName }.toTypedArray()
+        AlertDialog.Builder(requireContext())
+                .setTitle(R.string.layout_import_choose_file)
+                .setItems(fileNames) { _, which ->
+                    viewModel.importLayout(files[which].uri)
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+    }
+
+    private fun exportLayout(layout: LayoutConfiguration) {
+        viewModel.exportLayout(layout)
     }
 
     fun setOnLayoutSelectedListener(listener: (UUID?, LayoutSelectionReason) -> Unit) {
@@ -140,7 +188,11 @@ abstract class BaseLayoutsFragment : Fragment() {
      */
     abstract fun getFallbackLayoutId(): UUID?
 
-    private class LayoutsAdapter(private val layoutInteractionListener: LayoutInteractionListener) : RecyclerView.Adapter<LayoutsAdapter.ViewHolder>() {
+    private class LayoutsAdapter(
+            private val enableLayoutFileOperations: Boolean,
+            private val onExportLayout: (LayoutConfiguration) -> Unit,
+            private val layoutInteractionListener: LayoutInteractionListener,
+    ) : RecyclerView.Adapter<LayoutsAdapter.ViewHolder>() {
         class ViewHolder(private val binding: ItemLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
             lateinit var layoutConfiguration: LayoutConfiguration
                 private set
@@ -204,13 +256,23 @@ abstract class BaseLayoutsFragment : Fragment() {
                 binding.buttonLayoutOptions.setOnClickListener {
                     val popup = PopupMenu(parent.context, binding.buttonLayoutOptions)
                     popup.menuInflater.inflate(R.menu.layout_item_menu, popup.menu)
+                    popup.menu.findItem(R.id.action_layout_export)?.isVisible = enableLayoutFileOperations
                     popup.setOnMenuItemClickListener {
                         when (it.itemId) {
-                            R.id.action_layout_edit -> layoutInteractionListener.onEditLayout(holder.layoutConfiguration)
-                            R.id.action_layout_delete -> layoutInteractionListener.onDeleteLayout(holder.layoutConfiguration)
-                            else -> return@setOnMenuItemClickListener false
+                            R.id.action_layout_edit -> {
+                                layoutInteractionListener.onEditLayout(holder.layoutConfiguration)
+                                true
+                            }
+                            R.id.action_layout_export -> {
+                                onExportLayout(holder.layoutConfiguration)
+                                true
+                            }
+                            R.id.action_layout_delete -> {
+                                layoutInteractionListener.onDeleteLayout(holder.layoutConfiguration)
+                                true
+                            }
+                            else -> false
                         }
-                        return@setOnMenuItemClickListener true
                     }
                     popup.show()
                 }

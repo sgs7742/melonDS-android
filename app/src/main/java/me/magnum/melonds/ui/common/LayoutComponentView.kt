@@ -32,26 +32,30 @@ class LayoutComponentView(val view: View, val aspectRatio: Float, val component:
     }
 
     fun getPosition(): Point {
-        return Point().apply {
-            x = view.x.toInt()
-            y = view.y.toInt()
+        val params = view.layoutParams as? FrameLayout.LayoutParams
+        return if (params != null) {
+            Point(params.leftMargin, params.topMargin)
+        } else {
+            Point(view.x.toInt(), view.y.toInt())
         }
     }
 
     fun getWidth(): Int {
-        return view.width
+        val params = view.layoutParams as? FrameLayout.LayoutParams
+        return params?.width?.takeIf { it > 0 } ?: view.width
     }
 
     fun getHeight(): Int {
-        return view.height
+        val params = view.layoutParams as? FrameLayout.LayoutParams
+        return params?.height?.takeIf { it > 0 } ?: view.height
     }
 
     fun getRect(): Rect {
-        return Rect(
-                view.x.toInt(),
-                view.y.toInt(),
-                view.width,
-                view.height
-        )
+        val params = view.layoutParams as? FrameLayout.LayoutParams
+        return if (params != null) {
+            Rect(params.leftMargin, params.topMargin, params.width, params.height)
+        } else {
+            Rect(view.x.toInt(), view.y.toInt(), view.width, view.height)
+        }
     }
 }
