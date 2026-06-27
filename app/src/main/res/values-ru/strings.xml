@@ -150,6 +150,11 @@
     <string name="save_next_rom">Сохранять в каталог с игрой</string>
     <string name="save_file_directory">Каталог сохранений</string>
     <string name="save_state_location">Расположение быстрых сохранений</string>
+    <string name="confirm_save_load_state">Подтверждать сохранение/загрузку</string>
+    <string name="confirm_save_load_state_summary">Запрашивать подтверждение перед сохранением или загрузкой состояния</string>
+    <string name="save_state_confirmation">Сохранить в %1$s?</string>
+    <string name="save_state_overwrite_confirmation">Сохранить в %1$s? Существующие данные будут перезаписаны.</string>
+    <string name="load_state_confirmation">Загрузить %1$s? Текущий прогресс будет потерян.</string>
     <string name="input">Ввод</string>
     <string name="input_summary">Привязки кнопок, раскладки, тактильная отдача</string>
     <string name="key_mapping">Привязки кнопок</string>

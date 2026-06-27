@@ -42,6 +42,7 @@ interface SettingsRepository {
     fun getSaveFileDirectory(rom: Rom): Uri
     fun getSaveStateLocation(rom: Rom): SaveStateLocation
     fun getSaveStateDirectory(rom: Rom): Uri?
+    fun isSaveLoadStateConfirmationEnabled(): Boolean
 
     fun getControllerConfiguration(): ControllerConfiguration
     fun getSelectedLayoutId(): UUID

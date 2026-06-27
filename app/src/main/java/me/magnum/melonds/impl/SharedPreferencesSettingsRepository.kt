@@ -323,6 +323,10 @@ class SharedPreferencesSettingsRepository(
         }
     }
 
+    override fun isSaveLoadStateConfirmationEnabled(): Boolean {
+        return preferences.getBoolean("confirm_save_load_state", false)
+    }
+
     private fun getRomParentDirectory(rom: Rom): Uri {
         return uriHandler.getUriTreeDocument(rom.parentTreeUri)?.uri ?: throw Exception("Could not determine ROMs parent document")
     }

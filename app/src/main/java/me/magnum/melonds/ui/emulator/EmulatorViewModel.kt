@@ -261,6 +261,8 @@ class EmulatorViewModel @Inject constructor(
 
     fun areCheatsEnabled(): Boolean = settingsRepository.areCheatsEnabled()
 
+    fun isSaveLoadStateConfirmationEnabled(): Boolean = settingsRepository.isSaveLoadStateConfirmationEnabled()
+
     fun getRomEnabledCheats(romInfo: RomInfo): LiveData<List<Cheat>> {
         val liveData = MutableLiveData<List<Cheat>>()
 
