@@ -126,13 +126,17 @@ class RomEmulatorDelegate(activity: EmulatorActivity, private val picasso: Picas
     override fun onPauseMenuOptionSelected(option: PauseMenuOption) {
         when (option) {
             RomPauseMenuOption.SETTINGS -> activity.openSettings()
-            RomPauseMenuOption.SAVE_STATE -> pickSaveStateSlot {
-                saveState(it)
-                activity.resumeEmulation()
+            RomPauseMenuOption.SAVE_STATE -> pickSaveStateSlot { slot ->
+                confirmSaveState(slot) {
+                    saveState(slot)
+                    activity.resumeEmulation()
+                }
             }
-            RomPauseMenuOption.LOAD_STATE -> pickSaveStateSlot {
-                loadState(it)
-                activity.resumeEmulation()
+            RomPauseMenuOption.LOAD_STATE -> pickSaveStateSlot { slot ->
+                confirmLoadState(slot) {
+                    loadState(slot)
+                    activity.resumeEmulation()
+                }
             }
             RomPauseMenuOption.REWIND -> activity.openRewindWindow()
             RomPauseMenuOption.CHEATS -> openCheatsActivity()
@@ -144,19 +148,23 @@ class RomEmulatorDelegate(activity: EmulatorActivity, private val picasso: Picas
     override fun performQuickSave() {
         MelonEmulator.pauseEmulation()
         val quickSlot = activity.viewModel.getRomQuickSaveStateSlot(loadedRom)
-        if (saveState(quickSlot)) {
-            Toast.makeText(activity, R.string.saved, Toast.LENGTH_SHORT).show()
+        confirmSaveState(quickSlot) {
+            if (saveState(quickSlot)) {
+                Toast.makeText(activity, R.string.saved, Toast.LENGTH_SHORT).show()
+            }
+            MelonEmulator.resumeEmulation()
         }
-        MelonEmulator.resumeEmulation()
     }
 
     override fun performQuickLoad() {
         MelonEmulator.pauseEmulation()
         val quickSlot = activity.viewModel.getRomQuickSaveStateSlot(loadedRom)
-        if (loadState(quickSlot)) {
-            Toast.makeText(activity, R.string.loaded, Toast.LENGTH_SHORT).show()
+        confirmLoadState(quickSlot) {
+            if (loadState(quickSlot)) {
+                Toast.makeText(activity, R.string.loaded, Toast.LENGTH_SHORT).show()
+            }
+            MelonEmulator.resumeEmulation()
         }
-        MelonEmulator.resumeEmulation()
     }
 
     override fun getCrashContext(): Any {
@@ -170,6 +178,56 @@ class RomEmulatorDelegate(activity: EmulatorActivity, private val picasso: Picas
 
     override fun dispose() {
         cheatsLoadDisposable?.dispose()
+    }
+
+    private fun confirmSaveState(slot: SaveStateSlot, onConfirmed: () -> Unit) {
+        if (!activity.viewModel.isSaveLoadStateConfirmationEnabled()) {
+            onConfirmed()
+            return
+        }
+
+        val slotName = getSaveStateSlotName(slot)
+        val messageRes = if (slot.exists) {
+            R.string.save_state_overwrite_confirmation
+        } else {
+            R.string.save_state_confirmation
+        }
+
+        AlertDialog.Builder(activity)
+                .setTitle(R.string.save_state)
+                .setMessage(activity.getString(messageRes, slotName))
+                .setPositiveButton(R.string.save_state) { _, _ -> onConfirmed() }
+                .setNegativeButton(R.string.cancel) { _, _ -> activity.resumeEmulation() }
+                .setOnCancelListener { activity.resumeEmulation() }
+                .show()
+    }
+
+    private fun confirmLoadState(slot: SaveStateSlot, onConfirmed: () -> Unit) {
+        if (!slot.exists) {
+            onConfirmed()
+            return
+        }
+
+        if (!activity.viewModel.isSaveLoadStateConfirmationEnabled()) {
+            onConfirmed()
+            return
+        }
+
+        AlertDialog.Builder(activity)
+                .setTitle(R.string.load_state)
+                .setMessage(activity.getString(R.string.load_state_confirmation, getSaveStateSlotName(slot)))
+                .setPositiveButton(R.string.load_state) { _, _ -> onConfirmed() }
+                .setNegativeButton(R.string.cancel) { _, _ -> activity.resumeEmulation() }
+                .setOnCancelListener { activity.resumeEmulation() }
+                .show()
+    }
+
+    private fun getSaveStateSlotName(slot: SaveStateSlot): String {
+        return if (slot.slot == SaveStateSlot.QUICK_SAVE_SLOT) {
+            activity.getString(R.string.quick_slot)
+        } else {
+            slot.slot.toString()
+        }
     }
 
     private fun saveState(slot: SaveStateSlot): Boolean {

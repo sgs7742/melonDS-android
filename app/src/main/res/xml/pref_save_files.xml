@@ -27,4 +27,11 @@
             android:entries="@array/save_state_locations"
             android:entryValues="@array/save_state_location_values"
             android:defaultValue="save_dir" />
+
+    <SwitchPreference
+            android:key="confirm_save_load_state"
+            android:title="@string/confirm_save_load_state"
+            android:summary="@string/confirm_save_load_state_summary"
+            app:iconSpaceReserved="false"
+            android:defaultValue="false" />
 </PreferenceScreen>
